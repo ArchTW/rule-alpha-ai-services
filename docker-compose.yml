@@ -1,7 +1,7 @@
 version: '3.8'
 
 networks:
-  rule-alpha-net:
+  cocaen-net:
     external: true
 
 services:
@@ -27,7 +27,7 @@ services:
       - AI_MIN_CONFIDENCE=${AI_MIN_CONFIDENCE:-0.6}
       - MODEL_SAVE_PATH=/app/models
     networks:
-      - rule-alpha-net
+      - cocaen-net
     volumes:
       - ./rule_alpha_ai_advisor/models:/app/models
       - ./rule_alpha_ai_advisor/logs:/app/logs
@@ -56,7 +56,7 @@ services:
       - AI_GENERATIVE_TOP_P=${AI_GENERATIVE_TOP_P:-0.9}
       - MODEL_SAVE_PATH=/app/models
     networks:
-      - rule-alpha-net
+      - cocaen-net
     volumes:
       - ./rule_alpha_ai_generative/models:/app/models
       - ./rule_alpha_ai_generative/logs:/app/logs
@@ -78,7 +78,7 @@ services:
       - SHARED_MODEL_PATH=/app/shared_models
       - SHARED_DATA_PATH=/app/shared_data
     networks:
-      - rule-alpha-net
+      - cocaen-net
     volumes:
       - ./rule_alpha_ai_shared/shared_models:/app/shared_models
       - ./rule_alpha_ai_shared/shared_data:/app/shared_data

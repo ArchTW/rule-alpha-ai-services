@@ -1,0 +1,9 @@
+[submodule "rule_alpha_ai_advisor"]
+	path = rule_alpha_ai_advisor
+	url = https://github.com/ArchTW/rule_alpha_ai_advisor.git
+[submodule "rule_alpha_ai_generative"]
+	path = rule_alpha_ai_generative
+	url = https://github.com/ArchTW/rule_alpha_ai_generative.git
+[submodule "rule_alpha_ai_shared"]
+	path = rule_alpha_ai_shared
+	url = https://github.com/ArchTW/rule_alpha_ai_shared.git
