@@ -1,0 +1,146 @@
+version: '3.8'
+
+networks:
+  cocaen-net:
+    external: true
+
+services:
+  # 對抗式AI智能建議服務
+  rule_alpha_ai_advisor:
+    build:
+      context: ./rule_alpha_ai_advisor
+      dockerfile: Dockerfile
+    container_name: rule-alpha-ai-advisor
+    restart: always
+    environment:
+      - DB_HOST=mariadb
+      - DB_NAME=${RULE_ALPHA_DB_NAME:-rule_alpha}
+      - DB_USER=${RULE_ALPHA_DB_USER:-rule_alpha_user}
+      - DB_PASSWORD=${RULE_ALPHA_DB_PASSWORD}
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - MQTT_USERNAME=${MQTT_USERNAME}
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
+      - AI_FEATURE_DIM=${AI_FEATURE_DIM:-150}
+      - AI_ANALYSIS_INTERVAL=${AI_ANALYSIS_INTERVAL:-300}
+      - AI_TRAINING_INTERVAL=${AI_TRAINING_INTERVAL:-3600}
+      - AI_MIN_CONFIDENCE=${AI_MIN_CONFIDENCE:-0.6}
+      - MODEL_SAVE_PATH=/app/models
+    networks:
+      - cocaen-net
+    volumes:
+      - ./rule_alpha_ai_advisor/models:/app/models
+      - ./rule_alpha_ai_advisor/logs:/app/logs
+      - ./rule_alpha_ai_advisor/data:/app/data
+    profiles: ["production", "ai-services"]
+
+  # 生成式AI分析服務
+  rule_alpha_ai_generative:
+    build:
+      context: ./rule_alpha_ai_generative
+      dockerfile: Dockerfile
+    container_name: rule-alpha-ai-generative
+    restart: always
+    environment:
+      - DB_HOST=mariadb
+      - DB_NAME=${RULE_ALPHA_DB_NAME:-rule_alpha}
+      - DB_USER=${RULE_ALPHA_DB_USER:-rule_alpha_user}
+      - DB_PASSWORD=${RULE_ALPHA_DB_PASSWORD}
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - MQTT_USERNAME=${MQTT_USERNAME}
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
+      - AI_GENERATIVE_VOCAB_SIZE=${AI_GENERATIVE_VOCAB_SIZE:-1000}
+      - AI_GENERATIVE_MAX_SEQ_LENGTH=${AI_GENERATIVE_MAX_SEQ_LENGTH:-512}
+      - AI_GENERATIVE_TEMPERATURE=${AI_GENERATIVE_TEMPERATURE:-0.7}
+      - AI_GENERATIVE_TOP_P=${AI_GENERATIVE_TOP_P:-0.9}
+      - MODEL_SAVE_PATH=/app/models
+    networks:
+      - cocaen-net
+    volumes:
+      - ./rule_alpha_ai_generative/models:/app/models
+      - ./rule_alpha_ai_generative/logs:/app/logs
+      - ./rule_alpha_ai_generative/data:/app/data
+    profiles: ["production", "ai-services"]
+
+  # AI服務共享基礎組件
+  rule_alpha_ai_shared:
+    build:
+      context: ./rule_alpha_ai_shared
+      dockerfile: Dockerfile
+    container_name: rule-alpha-ai-shared
+    restart: always
+    environment:
+      - DB_HOST=mariadb
+      - DB_NAME=${RULE_ALPHA_DB_NAME:-rule_alpha}
+      - DB_USER=${RULE_ALPHA_DB_USER:-rule_alpha_user}
+      - DB_PASSWORD=${RULE_ALPHA_DB_PASSWORD}
+      - SHARED_MODEL_PATH=/app/shared_models
+      - SHARED_DATA_PATH=/app/shared_data
+    networks:
+      - cocaen-net
+    volumes:
+      - ./rule_alpha_ai_shared/shared_models:/app/shared_models
+      - ./rule_alpha_ai_shared/shared_data:/app/shared_data
+      - ./rule_alpha_ai_shared/logs:/app/logs
+    profiles: ["production", "ai-services"]
+
+  # 開發環境服務
+  rule_alpha_ai_advisor_dev:
+    build:
+      context: ./rule_alpha_ai_advisor
+      dockerfile: Dockerfile
+    container_name: rule-alpha-ai-advisor-dev
+    restart: unless-stopped
+    environment:
+      - DB_HOST=localhost
+      - DB_NAME=rule_alpha_dev
+      - DB_USER=root
+      - DB_PASSWORD=
+      - MQTT_BROKER=localhost
+      - MQTT_PORT=1883
+      - AI_FEATURE_DIM=150
+      - AI_ANALYSIS_INTERVAL=300
+      - AI_TRAINING_INTERVAL=3600
+      - AI_MIN_CONFIDENCE=0.6
+    volumes:
+      - ./rule_alpha_ai_advisor/models:/app/models
+      - ./rule_alpha_ai_advisor/logs:/app/logs
+    profiles: ["development"]
+
+  rule_alpha_ai_generative_dev:
+    build:
+      context: ./rule_alpha_ai_generative
+      dockerfile: Dockerfile
+    container_name: rule-alpha-ai-generative-dev
+    restart: unless-stopped
+    environment:
+      - DB_HOST=localhost
+      - DB_NAME=rule_alpha_dev
+      - DB_USER=root
+      - DB_PASSWORD=
+      - MQTT_BROKER=localhost
+      - MQTT_PORT=1883
+      - AI_GENERATIVE_VOCAB_SIZE=1000
+      - AI_GENERATIVE_MAX_SEQ_LENGTH=512
+      - AI_GENERATIVE_TEMPERATURE=0.7
+    volumes:
+      - ./rule_alpha_ai_generative/models:/app/models
+      - ./rule_alpha_ai_generative/logs:/app/logs
+    profiles: ["development"]
+
+  rule_alpha_ai_shared_dev:
+    build:
+      context: ./rule_alpha_ai_shared
+      dockerfile: Dockerfile
+    container_name: rule-alpha-ai-shared-dev
+    restart: unless-stopped
+    environment:
+      - DB_HOST=localhost
+      - DB_NAME=rule_alpha_dev
+      - DB_USER=root
+      - DB_PASSWORD=
+    volumes:
+      - ./rule_alpha_ai_shared/shared_models:/app/shared_models
+      - ./rule_alpha_ai_shared/shared_data:/app/shared_data
+    profiles: ["development"]
