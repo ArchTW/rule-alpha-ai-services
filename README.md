@@ -15,11 +15,11 @@ Rule Alpha AI Services
 
 ## 🤖 服務詳情
 
-| 服務 | 功能 | 執行頻率 | MQTT主題 |
-|------|------|----------|----------|
-| **ai-advisor** | 對抗式AI建議 | 持續運行 | `RuleAlpha/ai/advice/{id}` |
-| **ai-generative** | 生成式AI分析 | 持續運行 | `RuleAlpha/ai/generative/{id}` |
-| **ai-shared** | 共享基礎組件 | 持續運行 | `RuleAlpha/ai/shared/{id}` |
+| 服務 | 功能 | 執行頻率 | MQTT主題 | 狀態 |
+|------|------|----------|----------|------|
+| **ai-advisor** | 對抗式AI建議 | 持續運行/300秒分析 | `RuleAlpha/stock/+/ai_advice` | ✅ 運行中 |
+| **ai-generative** | 生成式AI分析 | 持續運行/定時訓練 | `RuleAlpha/stock/+/ai_generative_*` | ✅ 運行中 |
+| **ai-shared** | 共享基礎組件 | 持續運行 | 共享數據存儲 | ✅ 運行中 |
 
 ## 🚀 快速部署
 
@@ -91,14 +91,17 @@ docker-compose --profile development up -d
 #### 數據庫配置
 ```bash
 RULE_ALPHA_DB_NAME=rule_alpha          # 數據庫名稱
-RULE_ALPHA_DB_USER=rule_alpha_user     # 數據庫用戶
-RULE_ALPHA_DB_PASSWORD=your_password   # 數據庫密碼
+RULE_ALPHA_DB_USER=pma                 # 數據庫用戶
+RULE_ALPHA_DB_PASSWORD=****            # 數據庫密碼
 ```
 
 #### MQTT配置
 ```bash
 MQTT_USERNAME=cocaen                   # MQTT用戶名
-MQTT_PASSWORD=your_mqtt_password       # MQTT密碼
+MQTT_PASSWORD=****                     # MQTT密碼
+MQTT_HOST=mosquitto                    # MQTT主機
+MQTT_PORT=1883                         # MQTT端口
+MQTT_USE_SSL=false                     # 關閉SSL（使用內網通信）
 ```
 
 #### AI Advisor 配置
@@ -288,6 +291,21 @@ AI_RESPONSE_TIMEOUT=10
 GPU_USAGE_ALERT=90
 ```
 
+## 🔄 部署狀態
+
+### 當前版本：v1.0.0 (2025-07-14)
+- ✅ rule_alpha_ai_advisor: 運行中，已修復MQTT連接
+- ✅ rule_alpha_ai_generative: 運行中，模型訓練中
+- ✅ rule_alpha_ai_shared: 運行中，共享組件正常
+- ✅ 數據庫集成: 正常
+- ✅ MQTT通信: 正常（已切換至非SSL模式）
+- ⚠️ GPU加速: 不可用（使用CPU模式）
+
+### 最近更新
+- 2025-07-14: 修復MQTT連接問題，更新環境變數配置
+- 2025-07-14: 統一MQTT配置，添加SSL開關
+- 2025-07-14: 修復AI共享容器啟動問題
+
 ## 🔐 安全配置
 
 ### 模型安全
@@ -306,31 +324,40 @@ GPU_USAGE_ALERT=90
 
 ### 常見問題
 
-1. **模型載入失敗**
+1. **MQTT連接問題** ✅ 已修復
    ```bash
-   # 檢查模型檔案
-   docker-compose run --rm rule_alpha_ai_advisor ls -la /app/models/
+   # 檢查MQTT連接狀態
+   docker-compose logs rule_alpha_ai_advisor | grep MQTT
    
-   # 重新下載模型
-   docker-compose run --rm rule_alpha_ai_advisor python main.py --download-model
+   # 查看MQTT broker日誌
+   docker logs mosquitto
    ```
 
-2. **GPU記憶體不足**
+2. **AI模型訓練**
    ```bash
-   # 減少批次大小
-   export BATCH_SIZE=16
+   # 檢查訓練狀態
+   docker-compose logs rule_alpha_ai_advisor | grep training
    
-   # 啟用梯度檢查點
-   export GRADIENT_CHECKPOINTING=true
+   # 檢查模型文件
+   docker-compose exec rule_alpha_ai_advisor ls -la /app/models/
    ```
 
-3. **推理速度過慢**
+3. **數據庫連接失敗**
    ```bash
-   # 啟用模型量化
-   export USE_QUANTIZATION=true
+   # 檢查數據庫連接
+   docker-compose logs rule_alpha_ai_advisor | grep database
    
-   # 使用TensorRT優化
-   export USE_TENSORRT=true
+   # 查看數據庫日誌
+   docker logs mariadb
+   ```
+
+4. **共享容器問題** ✅ 已修復
+   ```bash
+   # 檢查共享容器狀態
+   docker-compose ps rule_alpha_ai_shared
+   
+   # 查看共享數據
+   docker-compose exec rule_alpha_ai_shared ls -la /app/shared_data/
    ```
 
 ### 調試模式

@@ -1,8 +1,7 @@
-version: '3.8'
-
 networks:
   cocaen-net:
     external: true
+    name: cocaen-docker_cocaen-net
 
 services:
   # 對抗式AI智能建議服務
@@ -17,8 +16,9 @@ services:
       - DB_NAME=${RULE_ALPHA_DB_NAME:-rule_alpha}
       - DB_USER=${RULE_ALPHA_DB_USER:-rule_alpha_user}
       - DB_PASSWORD=${RULE_ALPHA_DB_PASSWORD}
-      - MQTT_BROKER=mosquitto
+      - MQTT_HOST=mosquitto
       - MQTT_PORT=1883
+      - MQTT_USE_SSL=false
       - MQTT_USERNAME=${MQTT_USERNAME}
       - MQTT_PASSWORD=${MQTT_PASSWORD}
       - AI_FEATURE_DIM=${AI_FEATURE_DIM:-150}
@@ -46,8 +46,9 @@ services:
       - DB_NAME=${RULE_ALPHA_DB_NAME:-rule_alpha}
       - DB_USER=${RULE_ALPHA_DB_USER:-rule_alpha_user}
       - DB_PASSWORD=${RULE_ALPHA_DB_PASSWORD}
-      - MQTT_BROKER=mosquitto
+      - MQTT_HOST=mosquitto
       - MQTT_PORT=1883
+      - MQTT_USE_SSL=false
       - MQTT_USERNAME=${MQTT_USERNAME}
       - MQTT_PASSWORD=${MQTT_PASSWORD}
       - AI_GENERATIVE_VOCAB_SIZE=${AI_GENERATIVE_VOCAB_SIZE:-1000}
